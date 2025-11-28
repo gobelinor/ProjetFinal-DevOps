@@ -85,18 +85,28 @@ ansible --version
 **packer/config.auto.pkrvars.hcl** :
 ```hcl
 ovh_project_id = "votre_project_id"
-ovh_username   = "user-xxxxxxxxx"
-ovh_password   = "votre_password"
+ovh_username   = "openstack_username user-xxxxxxxxx"
+ovh_password   = "openstack_password"
 region         = "GRA9"
+flavor         = "b2-7"
+source_image   = "Ubuntu 22.04"
+ssh_username   = "ubuntu"
+network_uuid   = "b2c02fdc-ffdf-40f6-9722-533bd7058c06"
 ```
 
 **terraform/environments/prod/terraform.tfvars** :
 ```hcl
-ovh_project_id = "votre_project_id"
-ovh_username   = "user-xxxxxxxxx"
-ovh_password   = "votre_password"
-region         = "GRA9"
-ssh_key_name   = "lab-key"
+ovh_application_key    = "ovh_appkey"
+ovh_application_secret = "ovh_appsecret"
+ovh_consumer_key       = "ovh_consumerkey"
+ovh_project_id         = "ovh_projectid"
+
+openstack_username = "openstack_username"
+openstack_password = "openstack_password"
+
+region        = "UK1"
+instance_name = "nginx-lab"
+ssh_key_name  = "lab-key"
 ```
 
 > 💡 **Astuce** : Récupérez vos credentials OpenStack depuis l'interface OVH :  
