@@ -85,7 +85,7 @@ ansible --version
 **packer/config.auto.pkrvars.hcl** :
 ```hcl
 ovh_project_id = "votre_project_id"
-ovh_username   = "openstack_username user-xxxxxxxxx"
+ovh_username   = "openstack_username(user-xxxxxxxxx)"
 ovh_password   = "openstack_password"
 region         = "GRA9"
 flavor         = "b2-7"
