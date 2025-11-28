@@ -1,0 +1,21 @@
+- name: Configuration système au build-time
+  hosts: default
+  become: yes
+  gather_facts: yes
+
+  roles:
+    - system-hardening
+    - nginx-optimized
+
+  tasks:
+    - name: Créer le répertoire de l'application
+      file:
+        path: /var/www/myapp
+        state: directory
+        owner: www-data
+        group: www-data
+        mode: '0755'
+
+    - name: Message de build terminé
+      debug:
+        msg: "Image de base Nginx configurée avec succès"

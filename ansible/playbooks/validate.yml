@@ -1,0 +1,49 @@
+---
+- name: Validation complète de l'application
+  hosts: webservers
+  become: yes
+  gather_facts: yes
+
+  tasks:
+    - name: Vérifier que Nginx est actif
+      systemd:
+        name: nginx
+        state: started
+      register: nginx_status
+
+    - name: Vérifier que le port 80 est ouvert
+      wait_for:
+        port: 80
+        timeout: 5
+
+    - name: Tester la réponse HTTP
+      uri:
+        url: "http://localhost"
+        return_content: yes
+        status_code: 200
+      register: http_response
+
+    - name: Vérifier le contenu de la page
+      assert:
+        that:
+          - "'Application Déployée' in http_response.content"
+        fail_msg: "Le contenu de la page n'est pas correct"
+        success_msg: "La page d'accueil est correcte"
+
+    - name: Vérifier UFW
+      command: ufw status
+      register: ufw_status
+      changed_when: false
+
+    - name: Vérifier fail2ban
+      systemd:
+        name: fail2ban
+        state: started
+
+    - name: Afficher le résumé
+      debug:
+        msg:
+          - "✅ Tous les tests sont passés !"
+          - "🌐 Application accessible sur http://{{ ansible_host }}"
+          - "🔒 Sécurité configurée (UFW + Fail2ban)"
+          - "⚡ Nginx optimisé et fonctionnel"

@@ -1,0 +1,106 @@
+---
+- name: Configuration du Load Balancer
+  hosts: load_balancers
+  become: yes
+  gather_facts: yes
+
+  tasks:
+    - name: Attendre que SSH soit prêt
+      wait_for_connection:
+        timeout: 60
+        delay: 5
+
+  roles:
+    - load_balancer
+
+  post_tasks:
+    - name: Afficher l'URL du Load Balancer
+      debug:
+        msg: "Load Balancer configuré : http://{{ ansible_host }}"
+
+- name: Configuration des Web Servers
+  hosts: web_servers
+  become: yes
+  gather_facts: yes
+
+  tasks:
+    - name: Attendre que SSH soit prêt
+      wait_for_connection:
+        timeout: 60
+        delay: 5
+
+  roles:
+    - web_server
+
+  post_tasks:
+    - name: Afficher les Web Servers
+      debug:
+        msg: "Web Server {{ inventory_hostname }} : http://{{ ansible_host }}"
+
+- name: Configuration des Database Servers
+  hosts: db_servers
+  become: yes
+  gather_facts: yes
+
+  pre_tasks:
+    - name: Attendre que SSH soit prêt
+      wait_for_connection:
+        timeout: 60
+        delay: 5
+
+    - name: Installer les dépendances Python pour PostgreSQL
+      apt:
+        name:
+          - python3-psycopg2
+          - python3-pip
+        state: present
+        update_cache: yes
+
+  roles:
+    - db_server
+
+  post_tasks:
+    - name: Afficher les DB Servers
+      debug:
+        msg: "DB Server {{ inventory_hostname }} ({{ db_role }}) : {{ ansible_host }}"
+
+- name: Configuration des App Servers
+  hosts: app_servers
+  become: yes
+  gather_facts: yes
+
+  tasks:
+    - name: Attendre que SSH soit prêt
+      wait_for_connection:
+        timeout: 60
+        delay: 5
+
+  roles:
+    - app_server
+
+  post_tasks:
+    - name: Afficher les App Servers
+      debug:
+        msg: "App Server {{ inventory_hostname }} : http://{{ ansible_host }}:3000/api/health"
+
+- name: Résumé du déploiement
+  hosts: localhost
+  gather_facts: no
+
+  tasks:
+    - name: Afficher le résumé
+      debug:
+        msg: |
+          ========================================
+          🎉 Déploiement terminé avec succès !
+          ========================================
+          
+          🌐 Application : http://{{ hostvars[groups['load_balancers'][0]]['ansible_host'] }}
+          
+          📊 Infrastructure :
+            - Load Balancer : {{ hostvars[groups['load_balancers'][0]]['ansible_host'] }}
+            - Web Servers   : {{ groups['web_servers'] | map('extract', hostvars, 'ansible_host') | join(', ') }}
+            - App Servers   : {{ groups['app_servers'] | map('extract', hostvars, 'ansible_host') | join(', ') }}
+            - DB Servers    : {{ groups['db_servers'] | map('extract', hostvars, 'ansible_host') | join(', ') }}
+          
+          ========================================

@@ -1,0 +1,13 @@
+---
+- name: Sécurisation réseau de tous les serveurs
+  hosts: all
+  become: yes
+  gather_facts: yes
+
+  roles:
+    - network_security
+
+  post_tasks:
+    - name: Résumé de la sécurisation
+      debug:
+        msg: "Firewall UFW configuré sur {{ inventory_hostname }}"

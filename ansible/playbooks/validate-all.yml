@@ -1,0 +1,97 @@
+---
+- name: Validation de l'infrastructure
+  hosts: all
+  become: yes
+  gather_facts: yes
+
+  tasks:
+    - name: Vérifier la connectivité
+      ping:
+
+    - name: Vérifier l'uptime
+      command: uptime
+      register: uptime_result
+      changed_when: false
+
+    - name: Afficher l'uptime
+      debug:
+        msg: "{{ inventory_hostname }}: {{ uptime_result.stdout }}"
+
+- name: Validation du Load Balancer
+  hosts: load_balancers
+  become: yes
+
+  tasks:
+    - name: Vérifier Nginx
+      systemd:
+        name: nginx
+        state: started
+      check_mode: yes
+
+    - name: Tester le Load Balancer
+      uri:
+        url: http://localhost/health
+        return_content: yes
+      register: lb_health
+
+    - name: Afficher le statut LB
+      debug:
+        msg: "Load Balancer: {{ lb_health.content }}"
+
+- name: Validation des Web Servers
+  hosts: web_servers
+  become: yes
+
+  tasks:
+    - name: Vérifier Nginx
+      systemd:
+        name: nginx
+        state: started
+      check_mode: yes
+
+    - name: Tester le Web Server
+      uri:
+        url: http://localhost/health
+        return_content: yes
+      register: web_health
+
+    - name: Afficher le statut Web
+      debug:
+        msg: "{{ inventory_hostname }}: {{ web_health.content }}"
+
+- name: Validation des App Servers
+  hosts: app_servers
+  become: yes
+
+  tasks:
+    - name: Tester l'API
+      uri:
+        url: http://localhost:3000/api/health
+        return_content: yes
+      register: api_health
+
+    - name: Afficher le statut API
+      debug:
+        msg: "{{ inventory_hostname }}: {{ api_health.json }}"
+
+- name: Validation des DB Servers
+  hosts: db_servers
+  become: yes
+
+  tasks:
+    - name: Vérifier PostgreSQL
+      systemd:
+        name: postgresql
+        state: started
+      check_mode: yes
+
+    - name: Tester la connexion PostgreSQL
+      become_user: postgres
+      postgresql_query:
+        db: devops_db
+        query: "SELECT version();"
+      register: db_version
+
+    - name: Afficher la version PostgreSQL
+      debug:
+        msg: "{{ inventory_hostname }}: PostgreSQL OK"

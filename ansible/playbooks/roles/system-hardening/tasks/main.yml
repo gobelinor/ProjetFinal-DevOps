@@ -1,0 +1,64 @@
+---
+- name: Mise à jour du système
+  apt:
+    update_cache: yes
+    upgrade: dist
+
+- name: Installation des paquets de base
+  apt:
+    name:
+      - curl
+      - wget
+      - vim
+      - htop
+      - net-tools
+      - ufw
+      - fail2ban
+    state: present
+
+- name: Configuration du timezone
+  timezone:
+    name: Europe/Paris
+
+- name: Configuration UFW - Autoriser SSH
+  ufw:
+    rule: allow
+    port: '22'
+    proto: tcp
+
+- name: Configuration UFW - Autoriser HTTP
+  ufw:
+    rule: allow
+    port: '80'
+    proto: tcp
+
+- name: Configuration UFW - Autoriser HTTPS
+  ufw:
+    rule: allow
+    port: '443'
+    proto: tcp
+
+- name: Activer UFW
+  ufw:
+    state: enabled
+    policy: deny
+
+- name: Démarrer et activer fail2ban
+  systemd:
+    name: fail2ban
+    state: started
+    enabled: yes
+
+- name: Optimisation système - Limites de fichiers
+  pam_limits:
+    domain: '*'
+    limit_type: '-'
+    limit_item: nofile
+    value: '65535'
+
+- name: Optimisation kernel - swappiness
+  sysctl:
+    name: vm.swappiness
+    value: '10'
+    state: present
+    reload: yes

@@ -1,0 +1,97 @@
+---
+- name: Configuration de la sécurité réseau avec UFW
+  block:
+    - name: Réinitialiser UFW
+      ufw:
+        state: reset
+      when: reset_firewall | default(false)
+
+    - name: Configurer les règles par défaut
+      ufw:
+        direction: "{{ item.direction }}"
+        policy: "{{ item.policy }}"
+      loop:
+        - { direction: 'incoming', policy: 'deny' }
+        - { direction: 'outgoing', policy: 'allow' }
+
+    - name: Autoriser SSH (sinon on se coupe)
+      ufw:
+        rule: allow
+        port: '22'
+        proto: tcp
+
+    - name: Configurer les règles spécifiques au Load Balancer
+      when: "'load_balancers' in group_names"
+      block:
+        - name: Autoriser HTTP depuis Internet
+          ufw:
+            rule: allow
+            port: '80'
+            proto: tcp
+
+        - name: Autoriser HTTPS depuis Internet
+          ufw:
+            rule: allow
+            port: '443'
+            proto: tcp
+
+    - name: Configurer les règles spécifiques aux Web Servers
+      when: "'web_servers' in group_names"
+      block:
+        - name: Autoriser HTTP depuis le Load Balancer
+          ufw:
+            rule: allow
+            port: '80'
+            proto: tcp
+            from_ip: "{{ hostvars[groups['load_balancers'][0]]['ansible_host'] }}"
+
+        - name: Autoriser HTTPS depuis le Load Balancer
+          ufw:
+            rule: allow
+            port: '443'
+            proto: tcp
+            from_ip: "{{ hostvars[groups['load_balancers'][0]]['ansible_host'] }}"
+
+    - name: Configurer les règles spécifiques aux App Servers
+      when: "'app_servers' in group_names"
+      block:
+        - name: Autoriser port 3000 depuis les Web Servers
+          ufw:
+            rule: allow
+            port: '3000'
+            proto: tcp
+            from_ip: "{{ item }}"
+          loop: "{{ groups['web_servers'] | map('extract', hostvars, 'ansible_host') | list }}"
+
+    - name: Configurer les règles spécifiques aux DB Servers
+      when: "'db_servers' in group_names"
+      block:
+        - name: Autoriser PostgreSQL depuis les App Servers
+          ufw:
+            rule: allow
+            port: '5432'
+            proto: tcp
+            from_ip: "{{ item }}"
+          loop: "{{ groups['app_servers'] | map('extract', hostvars, 'ansible_host') | list }}"
+
+        - name: Autoriser PostgreSQL depuis les autres DB Servers (réplication)
+          ufw:
+            rule: allow
+            port: '5432'
+            proto: tcp
+            from_ip: "{{ item }}"
+          loop: "{{ groups['db_servers'] | map('extract', hostvars, 'ansible_host') | list }}"
+          when: item != ansible_host
+
+    - name: Activer UFW
+      ufw:
+        state: enabled
+
+    - name: Afficher l'état UFW
+      command: ufw status verbose
+      register: ufw_status
+      changed_when: false
+
+    - name: Afficher les règles UFW
+      debug:
+        var: ufw_status.stdout_lines

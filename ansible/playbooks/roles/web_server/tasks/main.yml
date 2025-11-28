@@ -1,0 +1,50 @@
+---
+- name: Configuration du Web Server
+  block:
+    - name: Créer le répertoire de contenu statique
+      file:
+        path: /var/www/static
+        state: directory
+        owner: www-data
+        group: www-data
+        mode: '0755'
+
+    - name: Déployer la page d'accueil
+      template:
+        src: index.html.j2
+        dest: /var/www/static/index.html
+        owner: www-data
+        group: www-data
+        mode: '0644'
+
+    - name: Déployer la configuration Nginx du Web Server
+      template:
+        src: web-server.conf.j2
+        dest: /etc/nginx/sites-available/web-server.conf
+        owner: root
+        group: root
+        mode: '0644'
+      notify: reload nginx
+
+    - name: Activer le site Web Server
+      file:
+        src: /etc/nginx/sites-available/web-server.conf
+        dest: /etc/nginx/sites-enabled/web-server.conf
+        state: link
+      notify: reload nginx
+
+    - name: Supprimer le site par défaut
+      file:
+        path: /etc/nginx/sites-enabled/default
+        state: absent
+      notify: reload nginx
+
+    - name: Vérifier la configuration Nginx
+      command: nginx -t
+      changed_when: false
+
+    - name: S'assurer que Nginx est démarré
+      systemd:
+        name: nginx
+        state: started
+        enabled: yes

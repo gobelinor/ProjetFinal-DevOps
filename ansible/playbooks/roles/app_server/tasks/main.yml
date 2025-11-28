@@ -1,0 +1,65 @@
+---
+- name: Configuration de l'App Server
+  block:
+    - name: Créer le répertoire de l'application
+      file:
+        path: /opt/app
+        state: directory
+        owner: ubuntu
+        group: ubuntu
+        mode: '0755'
+
+    - name: Déployer l'application Node.js
+      template:
+        src: app.js.j2
+        dest: /opt/app/app.js
+        owner: ubuntu
+        group: ubuntu
+        mode: '0644'
+
+    - name: Déployer package.json
+      copy:
+        content: |
+          {
+            "name": "devops-api",
+            "version": "1.0.0",
+            "main": "app.js",
+            "dependencies": {
+              "express": "^4.18.2",
+              "pg": "^8.11.0"
+            }
+          }
+        dest: /opt/app/package.json
+        owner: ubuntu
+        group: ubuntu
+        mode: '0644'
+
+    - name: Installer les dépendances Node.js
+      npm:
+        path: /opt/app
+        state: present
+      become_user: ubuntu
+
+    - name: Déployer le fichier PM2 ecosystem
+      template:
+        src: ecosystem.config.js.j2
+        dest: /opt/app/ecosystem.config.js
+        owner: ubuntu
+        group: ubuntu
+        mode: '0644'
+
+    - name: Démarrer l'application avec PM2
+      command: pm2 start /opt/app/ecosystem.config.js
+      become_user: ubuntu
+      args:
+        chdir: /opt/app
+      changed_when: false
+
+    - name: Sauvegarder la configuration PM2
+      command: pm2 save
+      become_user: ubuntu
+      changed_when: false
+
+    - name: Configurer PM2 au démarrage
+      command: pm2 startup systemd -u ubuntu --hp /home/ubuntu
+      changed_when: false

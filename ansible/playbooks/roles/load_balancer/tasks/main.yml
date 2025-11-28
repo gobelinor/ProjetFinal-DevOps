@@ -1,0 +1,34 @@
+---
+- name: Configuration du Load Balancer
+  block:
+    - name: Déployer la configuration Nginx du Load Balancer
+      template:
+        src: load-balancer.conf.j2
+        dest: /etc/nginx/sites-available/load-balancer.conf
+        owner: root
+        group: root
+        mode: '0644'
+      notify: reload nginx
+
+    - name: Activer le site Load Balancer
+      file:
+        src: /etc/nginx/sites-available/load-balancer.conf
+        dest: /etc/nginx/sites-enabled/load-balancer.conf
+        state: link
+      notify: reload nginx
+
+    - name: Supprimer le site par défaut
+      file:
+        path: /etc/nginx/sites-enabled/default
+        state: absent
+      notify: reload nginx
+
+    - name: Vérifier la configuration Nginx
+      command: nginx -t
+      changed_when: false
+
+    - name: S'assurer que Nginx est démarré
+      systemd:
+        name: nginx
+        state: started
+        enabled: yes

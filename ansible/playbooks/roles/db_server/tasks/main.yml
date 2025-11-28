@@ -1,0 +1,100 @@
+---
+- name: Configuration du Database Server
+  block:
+    - name: Déterminer la version de PostgreSQL
+      shell: ls /etc/postgresql/ | head -n1
+      register: pg_version
+      changed_when: false
+
+    - name: Afficher la version PostgreSQL
+      debug:
+        msg: "PostgreSQL version: {{ pg_version.stdout }}"
+
+    - name: Créer l'utilisateur PostgreSQL
+      become: yes
+      become_user: postgres
+      postgresql_user:
+        name: devops_user
+        password: devops_password
+        encrypted: yes
+        state: present
+
+    - name: Créer la base de données
+      become: yes
+      become_user: postgres
+      postgresql_db:
+        name: devops_db
+        owner: devops_user
+        state: present
+
+    - name: Créer la table users
+      become: yes
+      become_user: postgres
+      postgresql_query:
+        db: devops_db
+        query: |
+          CREATE TABLE IF NOT EXISTS users (
+            id SERIAL PRIMARY KEY,
+            name VARCHAR(100) NOT NULL,
+            email VARCHAR(100) UNIQUE NOT NULL,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+          );
+          
+          INSERT INTO users (name, email) VALUES
+          ('Alice Dupont', 'alice@example.com'),
+          ('Bob Martin', 'bob@example.com'),
+          ('Charlie Dubois', 'charlie@example.com')
+          ON CONFLICT (email) DO NOTHING;
+
+    - name: Accorder les privilèges sur la base de données
+      become: yes
+      become_user: postgres
+      postgresql_privs:
+        database: devops_db
+        roles: devops_user
+        privs: ALL
+        type: database
+        state: present
+
+    - name: Accorder les privilèges sur la table users
+      become: yes
+      become_user: postgres
+      postgresql_privs:
+        database: devops_db
+        roles: devops_user
+        objs: users
+        privs: SELECT,INSERT,UPDATE,DELETE
+        type: table
+        state: present
+
+    - name: Accorder les privilèges sur la séquence
+      become: yes
+      become_user: postgres
+      postgresql_privs:
+        database: devops_db
+        roles: devops_user
+        objs: users_id_seq
+        privs: SELECT,UPDATE
+        type: sequence
+        state: present
+
+    - name: Configurer PostgreSQL pour accepter les connexions externes
+      lineinfile:
+        path: "/etc/postgresql/{{ pg_version.stdout }}/main/postgresql.conf"
+        regexp: "^#?listen_addresses"
+        line: "listen_addresses = '*'"
+        state: present
+      notify: restart postgresql
+
+    - name: Configurer pg_hba.conf pour autoriser les connexions
+      lineinfile:
+        path: "/etc/postgresql/{{ pg_version.stdout }}/main/pg_hba.conf"
+        line: "host    all    all    0.0.0.0/0    md5"
+        state: present
+      notify: restart postgresql
+
+    - name: S'assurer que PostgreSQL est démarré
+      systemd:
+        name: postgresql
+        state: started
+        enabled: yes
