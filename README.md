@@ -360,7 +360,7 @@ ansible -i inventory.yml db_servers -m systemd -a "name=postgresql state=restart
 ./destroy.sh
 ```
 
-### Détruire uniquement les VMs (garder les images)
+ou
 ```bash
 cd terraform/environments/prod
 terraform destroy
