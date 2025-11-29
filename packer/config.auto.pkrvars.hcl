@@ -1,0 +1,8 @@
+ovh_username   = "user-qvu5Ncgyh5WC"
+ovh_password   = "UXF6MqgBerxPxGwXwnb2qCrDE85StvUk"
+ovh_project_id = "320b240798f84ae898d37d36ac6d8826"
+region         = "GRA9"
+flavor         = "b2-7"
+source_image   = "Ubuntu 22.04"
+ssh_username   = "ubuntu"
+network_uuid   = "b2c02fdc-ffdf-40f6-9722-533bd7058c06"

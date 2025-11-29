@@ -9,9 +9,9 @@
         group: www-data
         mode: '0755'
 
-    - name: Déployer la page d'accueil
+    - name: Déployer la page d'accueil depuis app/frontend
       template:
-        src: index.html.j2
+        src: "{{ playbook_dir }}/../../app/frontend/index.html.j2"
         dest: /var/www/static/index.html
         owner: www-data
         group: www-data

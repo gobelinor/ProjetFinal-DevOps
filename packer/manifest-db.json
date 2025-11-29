@@ -1,0 +1,14 @@
+{
+  "builds": [
+    {
+      "name": "db-server",
+      "builder_type": "openstack",
+      "build_time": 1764433940,
+      "files": null,
+      "artifact_id": "46ede736-151f-43d3-9438-7217e74a374a",
+      "packer_run_uuid": "b6644acb-87a7-437e-676f-b3c13af270d3",
+      "custom_data": null
+    }
+  ],
+  "last_run_uuid": "b6644acb-87a7-437e-676f-b3c13af270d3"
+}

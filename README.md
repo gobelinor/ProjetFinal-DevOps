@@ -262,6 +262,18 @@ ProjetFinal-DevOps/
 ├── build-images.sh              # Build des images Packer
 ├── generate-inventory.sh        # Génération inventory Ansible
 │
+├── app/                         # Code applicatif
+│   ├── backend/                 # API Node.js
+│   │   ├── app.js.j2            # Application Express
+│   │   ├── ecosystem.config.js.j2  # Config PM2
+│   │   └── package.json         # Dépendances Node.js
+│   └── frontend/                # Contenu statique
+│       └── index.html.j2        # Page d'accueil
+│
+├── docs/                        # Documentation
+│   ├── README.md                # Guide d'installation complet
+│   └── TROUBLESHOOTING.md       # Guide de dépannage
+│
 ├── packer/                      # Images immuables
 │   ├── variables.pkr.hcl        # Variables Packer
 │   ├── config.auto.pkrvars.hcl  # Credentials (à configurer)
@@ -300,7 +312,7 @@ ProjetFinal-DevOps/
             ├── load_balancer/   # Config Load Balancer
             ├── web_server/      # Config Web Servers
             ├── app_server/      # Config App Servers
-            ├── db_server/       # Config DB Servers
+            ├── db_server/       # Config DB Servers (avec réplication)
             ├── network_security/# Sécurité réseau
             └── system-hardening/# Durcissement système
 ```
@@ -410,6 +422,25 @@ Via l'interface OVH :
 - **App Server** : Node.js 20 + Express 4.18 + PostgreSQL client
 - **Database** : PostgreSQL 14 avec réplication master-slave
 - **Process Manager** : PM2 en mode cluster (2 instances)
+
+### Réplication PostgreSQL
+
+La base de données utilise une réplication **streaming asynchrone** :
+
+| Serveur | Rôle | Description |
+|---------|------|-------------|
+| DB Server 1 | **Master** | Accepte les écritures, réplique vers le Slave |
+| DB Server 2 | **Slave** | Lecture seule, réplication en temps réel |
+
+**Vérifier le statut de la réplication :**
+```bash
+# Sur le Master
+ssh ubuntu@<DB_MASTER_IP> "sudo -u postgres psql -c 'SELECT client_addr, state FROM pg_stat_replication;'"
+
+# Sur le Slave
+ssh ubuntu@<DB_SLAVE_IP> "sudo -u postgres psql -c 'SELECT pg_is_in_recovery();'"
+# Doit retourner 't' (true)
+```
 
 ## 🔧 Dépannage
 

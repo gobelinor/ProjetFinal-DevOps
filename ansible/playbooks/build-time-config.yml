@@ -5,7 +5,6 @@
 
   roles:
     - system-hardening
-    - nginx-optimized
 
   tasks:
     - name: Créer le répertoire de l'application
@@ -15,7 +14,8 @@
         owner: www-data
         group: www-data
         mode: '0755'
+      when: image_type == 'web'
 
     - name: Message de build terminé
       debug:
-        msg: "Image de base Nginx configurée avec succès"
+        msg: "Image {{ image_type }} configurée avec succès"

@@ -1,0 +1,73 @@
+const express = require('express');
+const { Pool } = require('pg');
+const os = require('os');
+
+const app = express();
+const port = 3000;
+
+// Configuration PostgreSQL
+const pool = new Pool({
+    host: '{{ db_host }}',
+    port: 5432,
+    database: 'devops_db',
+    user: 'devops_user',
+    password: 'devops_password'
+});
+
+app.use(express.json());
+
+// Health check
+app.get('/api/health', (req, res) => {
+    res.json({
+        status: 'OK',
+        server: os.hostname(),
+        timestamp: new Date().toISOString()
+    });
+});
+
+// Info système
+app.get('/api/info', (req, res) => {
+    res.json({
+        hostname: os.hostname(),
+        platform: os.platform(),
+        arch: os.arch(),
+        cpus: os.cpus().length,
+        memory: {
+            total: Math.round(os.totalmem() / 1024 / 1024) + ' MB',
+            free: Math.round(os.freemem() / 1024 / 1024) + ' MB'
+        },
+        uptime: Math.round(os.uptime()) + ' seconds'
+    });
+});
+
+// Test base de données
+app.get('/api/db/test', async (req, res) => {
+    try {
+        const result = await pool.query('SELECT NOW()');
+        res.json({
+            status: 'Connected',
+            database: '{{ db_host }}',
+            timestamp: result.rows[0].now
+        });
+    } catch (err) {
+        res.status(500).json({
+            status: 'Error',
+            error: err.message
+        });
+    }
+});
+
+// Liste des utilisateurs (exemple)
+app.get('/api/users', async (req, res) => {
+    try {
+        const result = await pool.query('SELECT * FROM users ORDER BY created_at DESC');
+        res.json(result.rows);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+app.listen(port, '0.0.0.0', () => {
+    console.log(`App server running on port ${port}`);
+    console.log(`Hostname: ${os.hostname()}`);
+});

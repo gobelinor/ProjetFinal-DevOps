@@ -37,10 +37,12 @@
       debug:
         msg: "Web Server {{ inventory_hostname }} : http://{{ ansible_host }}"
 
-- name: Configuration des Database Servers
+- name: Configuration du Database Master
   hosts: db_servers
   become: yes
   gather_facts: yes
+  serial: 1
+  order: sorted
 
   pre_tasks:
     - name: Attendre que SSH soit prêt

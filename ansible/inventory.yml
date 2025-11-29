@@ -3,53 +3,53 @@ all:
     load_balancers:
       hosts:
         load_balancer:
-          ansible_host: 57.128.7.101
+          ansible_host: 57.128.7.94
           ansible_user: ubuntu
           ansible_ssh_private_key_file: ~/.ssh/id_ed25519
 
     web_servers:
       hosts:
         web_server_1:
-          ansible_host: 57.128.7.178
+          ansible_host: 57.128.7.69
           ansible_user: ubuntu
           ansible_ssh_private_key_file: ~/.ssh/id_ed25519
         web_server_2:
-          ansible_host: 57.128.7.123
+          ansible_host: 57.128.7.95
           ansible_user: ubuntu
           ansible_ssh_private_key_file: ~/.ssh/id_ed25519
 
     app_servers:
       hosts:
         app_server_1:
-          ansible_host: 57.128.7.208
+          ansible_host: 57.128.7.187
           ansible_user: ubuntu
           ansible_ssh_private_key_file: ~/.ssh/id_ed25519
-          db_host: 57.128.7.63
+          db_host: 57.128.7.98
         app_server_2:
-          ansible_host: 57.128.7.184
+          ansible_host: 57.128.7.17
           ansible_user: ubuntu
           ansible_ssh_private_key_file: ~/.ssh/id_ed25519
-          db_host: 57.128.7.63
+          db_host: 57.128.7.98
 
     db_servers:
       hosts:
         db_server_1:
-          ansible_host: 57.128.7.63
+          ansible_host: 57.128.7.98
           ansible_user: ubuntu
           ansible_ssh_private_key_file: ~/.ssh/id_ed25519
           db_role: master
-          db_slave_ip: 57.128.7.119
+          db_slave_ip: 57.128.7.134
         db_server_2:
-          ansible_host: 57.128.7.119
+          ansible_host: 57.128.7.134
           ansible_user: ubuntu
           ansible_ssh_private_key_file: ~/.ssh/id_ed25519
           db_role: slave
-          db_master_ip: 57.128.7.63
+          db_master_ip: 57.128.7.98
 
   vars:
     web_server_ips:
-      - 57.128.7.178
-      - 57.128.7.123
+      - 57.128.7.69
+      - 57.128.7.95
     app_server_ips:
-      - 57.128.7.208
-      - 57.128.7.184
+      - 57.128.7.187
+      - 57.128.7.17
