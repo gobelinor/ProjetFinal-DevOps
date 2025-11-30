@@ -164,9 +164,6 @@ cd ../../..
 # Générer l'inventory avec les IPs des VMs
 ./generate-inventory.sh
 
-# Attendre que les VMs soient prêtes
-sleep 30
-
 # Déployer la configuration
 cd ansible
 ansible-playbook -i inventory.yml playbooks/deploy-all.yml
